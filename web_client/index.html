@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Commander</title>
+<meta name="theme-color" content="#c2410c">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --brand:#c2410c; --brand-dark:#9a3412; --bg:#fff7ed; --card:#ffffff;
+    --text:#1c1917; --muted:#78716c; --line:#e7e5e4; --ok:#15803d; --danger:#b91c1c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);padding-bottom:96px}
+  header{background:var(--brand);color:#fff;padding:20px 16px 18px}
+  header h1{margin:0;font-size:22px}
+  header p{margin:4px 0 0;opacity:.9;font-size:14px}
+  .badge{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:#fff;color:var(--ok)}
+  .badge.ferme{color:var(--danger)}
+  main{max-width:640px;margin:0 auto;padding:16px}
+  .plat{display:flex;gap:12px;background:var(--card);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .plat img,.plat .ph{width:88px;height:88px;border-radius:10px;object-fit:cover;flex:none;background:#fed7aa;display:flex;align-items:center;justify-content:center;font-size:36px}
+  .plat .info{flex:1;min-width:0}
+  .plat h3{margin:0 0 4px;font-size:16px}
+  .plat .desc{margin:0;color:var(--muted);font-size:13px}
+  .plat .bas{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+  .prix{font-weight:700;color:var(--brand-dark)}
+  .qte{display:flex;align-items:center;gap:10px}
+  .qte button{width:34px;height:34px;border-radius:50%;border:none;font-size:20px;line-height:1;cursor:pointer;background:var(--brand);color:#fff}
+  .qte button.moins{background:#fed7aa;color:var(--brand-dark)}
+  .qte span{min-width:16px;text-align:center;font-weight:700}
+  .barre{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
+  .btn{display:block;width:100%;max-width:640px;margin:0 auto;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;background:var(--brand);color:#fff;cursor:pointer}
+  .btn:disabled{opacity:.45;cursor:default}
+  .btn.sec{background:#fff;color:var(--brand);border:2px solid var(--brand)}
+  .vue{display:none}.vue.active{display:block}
+  .carte{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .carte h2{margin:0 0 12px;font-size:17px}
+  label{display:block;font-size:13px;font-weight:600;margin:12px 0 6px}
+  input,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;background:#fff}
+  textarea{min-height:64px;resize:vertical}
+  .choix{display:flex;gap:8px}
+  .choix button{flex:1;padding:12px;border-radius:10px;border:2px solid var(--line);background:#fff;font-size:15px;font-weight:600;cursor:pointer}
+  .choix button.on{border-color:var(--brand);background:#fff7ed;color:var(--brand-dark)}
+  .ligne{display:flex;justify-content:space-between;padding:6px 0;font-size:15px}
+  .ligne.total{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:700;font-size:17px}
+  .gps{margin-top:8px;width:100%;padding:11px;border-radius:10px;border:1px dashed var(--brand);background:#fff;color:var(--brand-dark);font-weight:600;font-size:14px;cursor:pointer}
+  .gps.ok{border-style:solid;border-color:var(--ok);color:var(--ok)}
+  .err{color:var(--danger);font-size:14px;margin-top:10px;min-height:1em}
+  .retour{background:none;border:none;color:var(--brand);font-weight:600;font-size:15px;padding:0 0 12px;cursor:pointer}
+  .num{font-size:42px;font-weight:800;color:var(--brand);margin:4px 0}
+  .code{font-family:ui-monospace,monospace;background:#fff7ed;padding:4px 10px;border-radius:6px;font-weight:700;letter-spacing:2px}
+  .etapes{list-style:none;padding:0;margin:16px 0 0}
+  .etapes li{display:flex;align-items:center;gap:12px;padding:10px 0;color:var(--muted)}
+  .etapes li .pt{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  .etapes li.fait{color:var(--text)}
+  .etapes li.fait .pt{background:var(--ok);border-color:var(--ok)}
+  .etapes li.actuel{color:var(--text);font-weight:700}
+  .etapes li.actuel .pt{border-color:var(--brand);background:var(--brand);animation:pulse 1.4s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+  .alerte{padding:12px;border-radius:10px;background:#fee2e2;color:var(--danger);font-weight:600;margin-top:12px}
+  .suivi-banniere{background:#fff;border:2px solid var(--brand);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+  .suivi-banniere button{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-weight:600;cursor:pointer}
+  .vide{text-align:center;color:var(--muted);padding:40px 0}
+  .demo{background:#1c1917;color:#fff;text-align:center;font-size:12px;padding:6px}
+</style>
+</head>
+<body>
+<div id="demo" class="demo" hidden>Mode démonstration — renseignez vos clés Supabase dans ce fichier</div>
+<header>
+  <h1 id="nomResto">…</h1>
+  <p>Commandez en ligne, on s'occupe du reste</p>
+  <span id="etat" class="badge">…</span>
+</header>
+
+<!-- VUE MENU -->
+<main id="vueMenu" class="vue active">
+  <div id="banniere"></div>
+  <div id="listePlats"><div class="vide">Chargement du menu…</div></div>
+</main>
+
+<!-- VUE PANIER / INFOS -->
+<main id="vuePanier" class="vue">
+  <button class="retour" onclick="afficher('vueMenu')">← Retour au menu</button>
+  <div class="carte">
+    <h2>Votre commande</h2>
+    <div id="recap"></div>
+  </div>
+  <div class="carte">
+    <h2>Comment voulez-vous la recevoir ?</h2>
+    <div class="choix">
+      <button id="tLivraison" class="on" onclick="choisirType('livraison')">🛵 Livraison</button>
+      <button id="tEmporter" onclick="choisirType('emporter')">🥡 À emporter</button>
+    </div>
+    <label for="fNom">Votre nom</label>
+    <input id="fNom" autocomplete="name" placeholder="Ex : Awa">
+    <label for="fTel">Téléphone</label>
+    <input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex : 70 00 00 00">
+    <div id="blocAdresse">
+      <label for="fAdresse">Adresse / repère</label>
+      <textarea id="fAdresse" placeholder="Quartier, rue, repère (ex : derrière la pharmacie…)"></textarea>
+      <button class="gps" id="btnGps" onclick="partagerPosition()">📍 Partager ma position (recommandé)</button>
+    </div>
+    <label for="fNote">Note (facultatif)</label>
+    <input id="fNote" placeholder="Ex : sans piment, bien chaud…">
+    <div class="err" id="erreur"></div>
+  </div>
+</main>
+
+<!-- VUE SUIVI -->
+<main id="vueSuivi" class="vue">
+  <div class="carte" style="text-align:center">
+    <div style="color:var(--muted)">Commande</div>
+    <div class="num" id="sNumero">#—</div>
+    <div>Code de suivi : <span class="code" id="sCode">——</span></div>
+    <div style="margin-top:8px;color:var(--muted);font-size:14px" id="sTotal"></div>
+  </div>
+  <div class="carte">
+    <h2>Suivi en direct</h2>
+    <ul class="etapes" id="etapes"></ul>
+    <div id="sAlerte"></div>
+  </div>
+  <button class="btn sec" onclick="nouvelleCommande()">Passer une nouvelle commande</button>
+</main>
+
+<div class="barre" id="barre">
+  <button class="btn" id="btnBarre" disabled onclick="actionBarre()">Votre panier est vide</button>
+</div>
+
+<script>
+/* ================= CONFIGURATION ================= */
+const SUPABASE_URL = 'https://VOTRE-PROJET.supabase.co';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
+/* ================================================= */
+
+const DEMO = SUPABASE_URL.includes('VOTRE');
+const sb = DEMO ? null : supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let reglages = { nom_restaurant: 'Shawarma', frais_livraison: 0, ouvert: true, telephone: '' };
+let plats = [];
+const panier = {};          // plat_id -> qte
+let type = 'livraison';
+let position = null;        // {lat, lng}
+let suiviTimer = null;
+
+const $ = (id) => document.getElementById(id);
+const fcfa = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' F';
+const echapper = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function lireStockage(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function ecrireStockage(k,v){ try { v===null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch(e){} }
+
+/* ---------- Données ---------- */
+async function charger() {
+  if (DEMO) {
+    $('demo').hidden = false;
+    reglages = { nom_restaurant: 'Chez Ali Shawarma', frais_livraison: 500, ouvert: true };
+    plats = [
+      { id: 'd1', nom: 'Shawarma poulet', description: 'Pain, poulet grillé, crudités, sauce maison', prix: 1500 },
+      { id: 'd2', nom: 'Shawarma viande', description: 'Pain, bœuf mariné, frites, sauce blanche', prix: 2000 },
+      { id: 'd3', nom: 'Shawarma mixte XL', description: 'Poulet + viande, double garniture', prix: 3000 },
+    ];
+  } else {
+    const [r, p] = await Promise.all([
+      sb.from('reglages').select('*').eq('id', 1).single(),
+      sb.from('plats').select('*').eq('disponible', true).order('ordre').order('nom'),
+    ]);
+    if (r.data) reglages = r.data;
+    plats = p.data || [];
+    if (p.error) $('listePlats').innerHTML = '<div class="vide">Impossible de charger le menu. Vérifiez votre connexion.</div>';
+  }
+  document.title = reglages.nom_restaurant;
+  $('nomResto').textContent = reglages.nom_restaurant;
+  $('etat').textContent = reglages.ouvert ? '● Ouvert — on prend vos commandes' : '● Fermé pour le moment';
+  $('etat').className = 'badge' + (reglages.ouvert ? '' : ' ferme');
+  if (plats.length || DEMO) afficherPlats();
+  verifierSuiviEnCours();
+  majBarre();
+}
+
+/* ---------- Menu ---------- */
+function afficherPlats() {
+  if (!plats.length) { $('listePlats').innerHTML = '<div class="vide">Aucun plat disponible pour le moment.</div>'; return; }
+  $('listePlats').innerHTML = plats.map(p => `
+    <div class="plat">
+      ${p.photo_url ? `<img src="${echapper(p.photo_url)}" alt="" loading="lazy">` : '<div class="ph">🌯</div>'}
+      <div class="info">
+        <h3>${echapper(p.nom)}</h3>
+        ${p.description ? `<p class="desc">${echapper(p.description)}</p>` : ''}
+        <div class="bas">
+          <span class="prix">${fcfa(p.prix)}</span>
+          <div class="qte">
+            ${panier[p.id] ? `<button class="moins" onclick="changer('${p.id}',-1)" aria-label="Retirer">−</button><span>${panier[p.id]}</span>` : ''}
+            <button onclick="changer('${p.id}',1)" aria-label="Ajouter">+</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function changer(id, d) {
+  panier[id] = Math.max(0, Math.min(50, (panier[id] || 0) + d));
+  if (!panier[id]) delete panier[id];
+  afficherPlats(); majBarre();
+  if ($('vuePanier').classList.contains('active')) afficherRecap();
+}
+const nbArticles = () => Object.values(panier).reduce((a, b) => a + b, 0);
+const sousTotal = () => Object.entries(panier).reduce((s, [id, q]) => s + (plats.find(p => p.id === id)?.prix || 0) * q, 0);
+const frais = () => type === 'livraison' ? (reglages.frais_livraison || 0) : 0;
+
+/* ---------- Panier ---------- */
+function afficherRecap() {
+  const lignes = Object.entries(panier).map(([id, q]) => {
+    const p = plats.find(x => x.id === id);
+    return `<div class="ligne"><span>${q} × ${echapper(p?.nom)}</span><span>${fcfa((p?.prix||0)*q)}</span></div>`;
+  }).join('');
+  $('recap').innerHTML = (lignes || '<div class="vide">Panier vide</div>') +
+    (frais() ? `<div class="ligne"><span>Frais de livraison</span><span>${fcfa(frais())}</span></div>` : '') +
+    `<div class="ligne total"><span>Total à payer ${type==='livraison'?'à la livraison':'au retrait'}</span><span>${fcfa(sousTotal()+frais())}</span></div>`;
+}
+function choisirType(t) {
+  type = t;
+  $('tLivraison').classList.toggle('on', t === 'livraison');
+  $('tEmporter').classList.toggle('on', t === 'emporter');
+  $('blocAdresse').style.display = t === 'livraison' ? '' : 'none';
+  afficherRecap(); majBarre();
+}
+function partagerPosition() {
+  if (!navigator.geolocation) { $('erreur').textContent = "Votre téléphone ne permet pas de partager la position."; return; }
+  $('btnGps').textContent = '⏳ Recherche de votre position…';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      position = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      $('btnGps').textContent = '✅ Position partagée';
+      $('btnGps').classList.add('ok');
+    },
+    () => {
+      $('btnGps').textContent = '📍 Partager ma position (recommandé)';
+      $('erreur').textContent = "Position refusée. Décrivez bien votre adresse et votre repère.";
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
+
+/* ---------- Barre du bas ---------- */
+function majBarre() {
+  const b = $('btnBarre');
+  if ($('vueSuivi').classList.contains('active')) { $('barre').style.display = 'none'; return; }
+  $('barre').style.display = '';
+  if (!reglages.ouvert) { b.disabled = true; b.textContent = 'Restaurant fermé'; return; }
+  const n = nbArticles();
+  if ($('vuePanier').classList.contains('active')) {
+    b.disabled = n === 0;
+    b.textContent = `Commander — ${fcfa(sousTotal() + frais())}`;
+  } else {
+    b.disabled = n === 0;
+    b.textContent = n ? `Voir mon panier (${n}) — ${fcfa(sousTotal())}` : 'Votre panier est vide';
+  }
+}
+function actionBarre() {
+  if ($('vuePanier').classList.contains('active')) return envoyer();
+  afficher('vuePanier'); afficherRecap();
+  const nom = lireStockage('client_nom'), tel = lireStockage('client_tel');
+  if (nom && !$('fNom').value) $('fNom').value = nom;
+  if (tel && !$('fTel').value) $('fTel').value = tel;
+}
+function afficher(id) {
+  document.querySelectorAll('.vue').forEach(v => v.classList.toggle('active', v.id === id));
+  window.scrollTo(0, 0); majBarre();
+}
+
+/* ---------- Envoi ---------- */
+async function envoyer() {
+  const nom = $('fNom').value.trim(), tel = $('fTel').value.trim(), adresse = $('fAdresse').value.trim();
+  $('erreur').textContent = '';
+  if (!nom) return $('erreur').textContent = 'Indiquez votre nom.';
+  if (tel.replace(/\D/g, '').length < 8) return $('erreur').textContent = 'Indiquez un numéro de téléphone valide.';
+  if (type === 'livraison' && !adresse && !position) return $('erreur').textContent = 'Indiquez votre adresse ou partagez votre position.';
+  const b = $('btnBarre'); b.disabled = true; b.textContent = 'Envoi en cours…';
+  const articles = Object.entries(panier).map(([plat_id, qte]) => ({ plat_id, qte }));
+  let res;
+  if (DEMO) {
+    res = { numero: 100 + Math.floor(Math.random() * 900), code: Math.random().toString(36).slice(2, 8).toUpperCase(), total: sousTotal() + frais() };
+  } else {
+    const { data, error } = await sb.rpc('passer_commande', {
+      p_nom: nom, p_tel: tel, p_type: type, p_adresse: adresse, p_note: $('fNote').value.trim(),
+      p_lat: position?.lat ?? null, p_lng: position?.lng ?? null, p_articles: articles,
+    });
+    if (error) { $('erreur').textContent = error.message || "La commande n'a pas pu être envoyée. Réessayez."; majBarre(); return; }
+    res = data;
+  }
+  ecrireStockage('client_nom', nom); ecrireStockage('client_tel', tel);
+  ecrireStockage('suivi_code', res.code);
+  Object.keys(panier).forEach(k => delete panier[k]);
+  afficherPlats();
+  ouvrirSuivi(res.code, res.numero, res.total);
+}
+
+/* ---------- Suivi ---------- */
+const ETAPES_LIVRAISON = [['nouvelle','Commande reçue'],['preparation','En préparation'],['prete','Prête'],['en_livraison','Le livreur est en route'],['livree','Livrée — bon appétit !']];
+const ETAPES_EMPORTER  = [['nouvelle','Commande reçue'],['preparation','En préparation'],['prete','Prête — venez la récupérer'],['servie','Récupérée — bon appétit !']];
+const TERMINES = ['livree','servie','echec','annulee'];
+
+function ouvrirSuivi(code, numero, total) {
+  $('sCode').textContent = code;
+  $('sNumero').textContent = numero ? '#' + numero : '#—';
+  $('sTotal').textContent = total ? 'Total : ' + fcfa(total) : '';
+  afficher('vueSuivi');
+  clearInterval(suiviTimer);
+  if (DEMO) return demoSuivi();
+  const tick = async () => {
+    const { data } = await sb.rpc('suivi_commande', { p_code: code });
+    if (!data) return;
+    $('sNumero').textContent = '#' + data.numero;
+    $('sTotal').textContent = 'Total : ' + fcfa(data.total);
+    dessinerEtapes(data.statut, data.type, data.motif);
+    if (TERMINES.includes(data.statut)) { clearInterval(suiviTimer); ecrireStockage('suivi_code', null); }
+  };
+  tick(); suiviTimer = setInterval(tick, 8000);
+}
+function dessinerEtapes(statut, t, motif) {
+  const etapes = t === 'livraison' ? ETAPES_LIVRAISON : ETAPES_EMPORTER;
+  const idx = etapes.findIndex(e => e[0] === statut);
+  const fini = TERMINES.includes(statut);
+  $('etapes').innerHTML = etapes.map((e, i) => {
+    const cls = i < idx || (fini && i === idx) ? 'fait' : (i === idx ? 'actuel' : '');
+    return `<li class="${cls}"><span class="pt">${cls === 'fait' ? '✓' : ''}</span>${e[1]}</li>`;
+  }).join('');
+  $('sAlerte').innerHTML =
+    statut === 'annulee' ? '<div class="alerte">Commande annulée par le restaurant. Appelez-nous si besoin.</div>' :
+    statut === 'echec' ? `<div class="alerte">Livraison non aboutie${motif ? ' : ' + echapper(motif) : ''}. Le restaurant va vous rappeler.</div>` : '';
+}
+function demoSuivi() {
+  const seq = ['nouvelle','preparation','prete','en_livraison','livree']; let i = 0;
+  dessinerEtapes(seq[0], 'livraison');
+  suiviTimer = setInterval(() => { i++; dessinerEtapes(seq[i], 'livraison'); if (i >= seq.length - 1) clearInterval(suiviTimer); }, 3000);
+}
+function verifierSuiviEnCours() {
+  const code = lireStockage('suivi_code');
+  $('banniere').innerHTML = code && !DEMO
+    ? `<div class="suivi-banniere"><span>Vous avez une commande en cours (<b>${echapper(code)}</b>)</span><button onclick="ouvrirSuivi('${echapper(code)}')">Suivre</button></div>` : '';
+}
+function nouvelleCommande() {
+  clearInterval(suiviTimer); position = null;
+  $('btnGps').classList.remove('ok'); $('btnGps').textContent = '📍 Partager ma position (recommandé)';
+  $('fNote').value = ''; verifierSuiviEnCours(); afficher('vueMenu');
+}
+
+charger();
+</script>
+</body>
+</html>

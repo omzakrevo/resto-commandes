@@ -1,0 +1,27 @@
+name: resto_commandes
+description: Commandes, cuisine et livraisons pour restaurant (tablette + livreur).
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  supabase_flutter: ^2.12.0
+  intl: any
+  url_launcher: ^6.3.0
+  audioplayers: ^6.1.0
+  image_picker: ^1.1.2
+  wakelock_plus: ^1.2.8
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
