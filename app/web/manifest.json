@@ -1,0 +1,35 @@
+{
+    "name": "Resto Commandes",
+    "short_name": "Resto",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FFF7ED",
+    "theme_color": "#C2410C",
+    "description": "Commandes, cuisine et livraisons",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
